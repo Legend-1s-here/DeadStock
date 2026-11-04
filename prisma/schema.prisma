@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  businessName  String
+  businessType  String    @default("F&B") // F&B, Retail, Office/IT, Logistics, Manufacturing, Other
+  city          String    @default("Mumbai")
+  address       String?
+  gstin         String?
+  phone         String?
+  bio           String?
+  avatar        String?
+  verified      Boolean   @default(true)
+  rating        Float     @default(4.9)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  listings      Listing[]
+  offersMade    Offer[]   @relation("BuyerOffers")
+  messages      Message[]
+  watchlists    Watchlist[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Listing {
+  id              String      @id @default(cuid())
+  title           String
+  description     String
+  category        String      // Commercial Kitchen, Retail Fixtures, Office Furniture, IT & POS Hardware, Industrial Equipment
+  condition       String      // Brand New, Like New, Good, Refurbished, Liquidation / As-Is
+  askingPrice     Float
+  originalPrice   Float
+  quantity        Int         @default(1)
+  minLotSize      Int         @default(1)
+  locationCity    String
+  locationAddress String?
+  pincode         String?
+  pickupDeadline  DateTime?
+  dimensions      String?
+  weight          String?
+  brand           String?
+  modelYear       String?
+  gstInvoice      Boolean     @default(true)
+  images          String      // JSON string array of image URLs
+  status          String      @default("ACTIVE") // ACTIVE, RESERVED, SOLD, CANCELLED
+  views           Int         @default(0)
+  featured        Boolean     @default(false)
+  
+  sellerId        String
+  seller          User        @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  offers          Offer[]
+  watchlists      Watchlist[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Offer {
+  id              String      @id @default(cuid())
+  listingId       String
+  listing         Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId         String
+  buyer           User        @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  
+  offeredPrice    Float       // Unit price offered
+  quantity        Int         @default(1)
+  totalAmount     Float       // offeredPrice * quantity
+  logisticsPref   String      @default("Buyer Pickup") // Buyer Pickup, Seller Delivery, Partner Logistics
+  message         String?
+  
+  counterPrice    Float?      // Counter offer unit price if seller counters
+  counterMessage  String?     // Counter proposal notes
+  status          String      @default("PENDING") // PENDING, COUNTERED, ACCEPTED, REJECTED, WITHDRAWN
+  
+  messages        Message[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  offerId     String
+  offer       Offer     @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content     String
+  createdAt   DateTime  @default(now())
+}
+
+model Watchlist {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listingId   String
+  listing     Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, listingId])
+}
+
+// NextAuth models
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
