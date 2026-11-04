@@ -3,6 +3,9 @@
 > **"Turn Dead Assets Into Live Capital"**  
 > A dedicated circular economy ReCommerce platform where businesses sell surplus commercial equipment, furniture, and fixtures directly to other businesses — with zero scrap yard middlemen.
 
+🚀 **Live Production Deployment**: [https://deadstock-five.vercel.app](https://deadstock-five.vercel.app)  
+📁 **GitHub Repository**: [https://github.com/Legend-1s-here/DeadStock](https://github.com/Legend-1s-here/DeadStock)
+
 ![DeadStock Banner](public/banner.jpg)
 
 ---
